@@ -15,35 +15,6 @@ if sudo [ ! -f /root/.ssh/id_rsa_virt_power ]; then
   sudo cat /root/.ssh/id_rsa_virt_power.pub | sudo tee -a /root/.ssh/authorized_keys
 fi
 
-ANSIBLE_FORCE_COLOR=true ansible-playbook \
-    -e "working_dir=$WORKING_DIR" \
-    -e "num_nodes=$NUM_NODES" \
-    -e "extradisks=$VM_EXTRADISKS" \
-    -e "virthost=$HOSTNAME" \
-    -e "platform=$NODES_PLATFORM" \
-    -e "libvirt_firmware=$LIBVIRT_FIRMWARE" \
-    -e "default_memory=$DEFAULT_HOSTS_MEMORY" \
-    -e "manage_baremetal=$MANAGE_BR_BRIDGE" \
-    -e "provisioning_url_host=$PROVISIONING_URL_HOST" \
-    -e "nodes_file=$NODES_FILE" \
-    -e "node_hostname_format=$NODE_HOSTNAME_FORMAT" \
-    -i vm-setup/inventory.ini \
-    -b vm-setup/setup-playbook.yml
-
-# Usually virt-manager/virt-install creates this: https://www.redhat.com/archives/libvir-list/2008-August/msg00179.html
-if ! sudo virsh pool-uuid default > /dev/null 2>&1 ; then
-    sudo virsh pool-define /dev/stdin <<EOF
-<pool type='dir'>
-  <name>default</name>
-  <target>
-    <path>/var/lib/libvirt/images</path>
-  </target>
-</pool>
-EOF
-    sudo virsh pool-start default
-    sudo virsh pool-autostart default
-fi
-
 if [[ $OS == ubuntu ]]; then
   # source ubuntu_bridge_network_configuration.sh
   # shellcheck disable=SC1091
@@ -103,12 +74,6 @@ else
       fi
   fi
 fi
-
-ANSIBLE_FORCE_COLOR=true ansible-playbook \
-    -e "{use_firewalld: $USE_FIREWALLD}" \
-    -e "external_subnet_v4: ${EXTERNAL_SUBNET_V4}" \
-    -i vm-setup/inventory.ini \
-    -b vm-setup/firewall.yml
 
 # FIXME(stbenjam): ansbile firewalld module doesn't seem to be doing the right thing
 if [ "$USE_FIREWALLD" == "True" ]; then
