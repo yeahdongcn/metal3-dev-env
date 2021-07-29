@@ -56,12 +56,3 @@ if [ "$MANAGE_PRO_BRIDGE" == "y" ]; then
        sudo brctl addif "$INT_IF"
      fi
  fi
-
- # restart the libvirt network so it applies an ip to the bridge
- if [ "$MANAGE_BR_BRIDGE" == "y" ] ; then
-     sudo virsh net-destroy baremetal
-     sudo virsh net-start baremetal
-     if [ "$INT_IF" ]; then #Need to bring UP the NIC after destroying the libvirt network
-         sudo ifup "$INT_IF"
-     fi
- fi
