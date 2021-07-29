@@ -8,13 +8,6 @@ source lib/common.sh
 # shellcheck disable=SC1091
 source lib/network.sh
 
-# Root needs a private key to talk to libvirt
-# See tripleo-quickstart-config/roles/virtbmc/tasks/configure-vbmc.yml
-if sudo [ ! -f /root/.ssh/id_rsa_virt_power ]; then
-  sudo ssh-keygen -f /root/.ssh/id_rsa_virt_power -P ""
-  sudo cat /root/.ssh/id_rsa_virt_power.pub | sudo tee -a /root/.ssh/authorized_keys
-fi
-
 if [[ $OS == ubuntu ]]; then
   # source ubuntu_bridge_network_configuration.sh
   # shellcheck disable=SC1091
@@ -64,12 +57,6 @@ else
           fi
       fi
   fi
-fi
-
-# FIXME(stbenjam): ansbile firewalld module doesn't seem to be doing the right thing
-if [ "$USE_FIREWALLD" == "True" ]; then
-  sudo firewall-cmd --zone=libvirt --change-interface=provisioning
-  sudo firewall-cmd --zone=libvirt --change-interface=baremetal
 fi
 
 # Need to route traffic from the provisioning host.
@@ -157,17 +144,6 @@ else
       -v "$IRONIC_DATA_DIR":/shared --entrypoint /bin/runhttpd \
       "${IRONIC_IMAGE}"
 fi
-
-# Start vbmc and sushy containers
-#shellcheck disable=SC2086
-sudo "${CONTAINER_RUNTIME}" run -d --net host --name vbmc ${POD_NAME_INFRA} \
-     -v "$WORKING_DIR/virtualbmc/vbmc":/root/.vbmc -v "/root/.ssh":/root/ssh \
-     "${VBMC_IMAGE}"
-
-#shellcheck disable=SC2086
-sudo "${CONTAINER_RUNTIME}" run -d --net host --name sushy-tools ${POD_NAME_INFRA} \
-     -v "$WORKING_DIR/virtualbmc/sushy-tools":/root/sushy -v "/root/.ssh":/root/ssh \
-     "${SUSHY_TOOLS_IMAGE}"
 
 # Installing the openstack/ironic clients on the host is optional
 # if not installed, we copy a wrapper to OPENSTACKCLIENT_PATH which
