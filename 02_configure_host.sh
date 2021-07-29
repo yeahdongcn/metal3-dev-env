@@ -64,15 +64,6 @@ else
           fi
       fi
   fi
-
-  # Restart the libvirt network so it applies an ip to the bridge
-  if [ "$MANAGE_BR_BRIDGE" == "y" ] ; then
-      sudo virsh net-destroy baremetal
-      sudo virsh net-start baremetal
-      if [ "$INT_IF" ]; then #Need to bring UP the NIC after destroying the libvirt network
-          sudo ifup "$INT_IF"
-      fi
-  fi
 fi
 
 # FIXME(stbenjam): ansbile firewalld module doesn't seem to be doing the right thing
